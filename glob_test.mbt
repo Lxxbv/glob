@@ -18,3 +18,16 @@ test "public api brace matching" {
   let result3 = @glob.match_pattern("*.{mbt,json}", "main.rs")
   inspect!(result3, content="Ok(false)")
 }
+
+test "public api filter" {
+  let paths = ["src/main.mbt", "src/utils.rs", "docs/index.md", "src/core/parser.mbt"]
+  
+  let result = @glob.filter("src/**/*.mbt", paths)
+  inspect!(result, content="Ok([src/main.mbt, src/core/parser.mbt])")
+
+  let result2 = @glob.filter("*.{mbt,rs}", paths)
+  inspect!(result2, content="Ok([])")
+
+  let result3 = @glob.filter("docs/*.md", paths)
+  inspect!(result3, content="Ok([docs/index.md])")
+}
