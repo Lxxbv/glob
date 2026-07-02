@@ -63,6 +63,7 @@ fn match_state(nodes : Array[AST], node_idx : Int, path : String, path_idx : Int
       false
     }
     AST::GlobStar => {
+      // 1. Standard behavior: match 0, 1, 2... characters (including '/')
       let mut k = 0
       let max_k = path.length() - path_idx
       while k <= max_k {
@@ -70,6 +71,33 @@ fn match_state(nodes : Array[AST], node_idx : Int, path : String, path_idx : Int
           return true
         }
         k = k + 1
+      }
+      // 2. Special behavior for **/ matching empty:
+      // If the next node is Text("/") or starts with "/", we can skip the "/" in the pattern and match 0 characters.
+      if node_idx + 1 < nodes.length() {
+        match nodes[node_idx + 1] {
+          AST::Text(s) => {
+            if s.length() > 0 && s[0].to_int().unsafe_to_char() == '/' {
+              if s.length() == 1 {
+                if match_state(nodes, node_idx + 2, path, path_idx) {
+                  return true
+                }
+              } else {
+                let rest_s = s[1:].to_string()
+                let new_nodes = [AST::Text(rest_s)]
+                let mut j = node_idx + 2
+                while j < nodes.length() {
+                  new_nodes.push(nodes[j])
+                  j = j + 1
+                }
+                if match_state(new_nodes, 0, path, path_idx) {
+                  return true
+                }
+              }
+            }
+          }
+          _ => ()
+        }
       }
       false
     }

@@ -1,4 +1,4 @@
-// Whitebox tests for the Glob Lexer and Parser.
+// Whitebox tests for the Glob Lexer, Parser, and Matcher.
 
 test "tokenize basic text" {
   let tokens = tokenize("hello").unwrap()
@@ -48,4 +48,46 @@ test "parse braces" {
   let tokens = tokenize("src/*.{mbt,json}").unwrap()
   let ast = parse(tokens).unwrap()
   inspect!(ast, content="Seq([Text(src/), Star, Text(.), Brace([[Text(mbt)], [Text(json)]])])")
+}
+
+test "match basic text" {
+  let ast = parse(tokenize("hello").unwrap()).unwrap()
+  inspect!(match_path(ast, "hello"), content="true")
+  inspect!(match_path(ast, "world"), content="false")
+}
+
+test "match star and question wildcards" {
+  let ast1 = parse(tokenize("src/*.mbt").unwrap()).unwrap()
+  inspect!(match_path(ast1, "src/main.mbt"), content="true")
+  inspect!(match_path(ast1, "src/core/utils.mbt"), content="false") // Star doesn't match '/'
+  inspect!(match_path(ast1, "src/main.json"), content="false")
+
+  let ast2 = parse(tokenize("a?c").unwrap()).unwrap()
+  inspect!(match_path(ast2, "abc"), content="true")
+  inspect!(match_path(ast2, "abbc"), content="false")
+}
+
+test "match globstar" {
+  let ast = parse(tokenize("src/**/*.mbt").unwrap()).unwrap()
+  inspect!(match_path(ast, "src/main.mbt"), content="true")
+  inspect!(match_path(ast, "src/core/utils.mbt"), content="true")
+  inspect!(match_path(ast, "src/deep/nested/file.mbt"), content="true")
+  inspect!(match_path(ast, "src/core/utils.json"), content="false")
+}
+
+test "match character classes" {
+  let ast = parse(tokenize("file[0-9].txt").unwrap()).unwrap()
+  inspect!(match_path(ast, "file5.txt"), content="true")
+  inspect!(match_path(ast, "filea.txt"), content="false")
+
+  let ast_neg = parse(tokenize("file[!0-9].txt").unwrap()).unwrap()
+  inspect!(match_path(ast_neg, "filea.txt"), content="true")
+  inspect!(match_path(ast_neg, "file5.txt"), content="false")
+}
+
+test "match braces" {
+  let ast = parse(tokenize("src/*.{mbt,json}").unwrap()).unwrap()
+  inspect!(match_path(ast, "src/main.mbt"), content="true")
+  inspect!(match_path(ast, "src/config.json"), content="true")
+  inspect!(match_path(ast, "src/main.rs"), content="false")
 }
