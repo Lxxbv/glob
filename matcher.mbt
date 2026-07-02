@@ -1,5 +1,6 @@
 // Matcher implementation for Glob patterns.
 
+///|
 /// Matches a path string against a parsed Glob AST.
 pub fn match_path(ast : AST, path : String) -> Bool {
   let nodes = match ast {
@@ -9,7 +10,13 @@ pub fn match_path(ast : AST, path : String) -> Bool {
   match_state(nodes, 0, path, 0)
 }
 
-fn match_state(nodes : Array[AST], node_idx : Int, path : String, path_idx : Int) -> Bool {
+///|
+fn match_state(
+  nodes : Array[AST],
+  node_idx : Int,
+  path : String,
+  path_idx : Int,
+) -> Bool {
   if node_idx == nodes.length() {
     return path_idx == path.length()
   }
@@ -76,14 +83,14 @@ fn match_state(nodes : Array[AST], node_idx : Int, path : String, path_idx : Int
       // If the next node is Text("/") or starts with "/", we can skip the "/" in the pattern and match 0 characters.
       if node_idx + 1 < nodes.length() {
         match nodes[node_idx + 1] {
-          AST::Text(s) => {
+          AST::Text(s) =>
             if s.length() > 0 && s[0].to_int().unsafe_to_char() == '/' {
               if s.length() == 1 {
                 if match_state(nodes, node_idx + 2, path, path_idx) {
                   return true
                 }
               } else {
-                let rest_s = s[1:].to_string()
+                let rest_s = s[1:].to_owned()
                 let new_nodes = [AST::Text(rest_s)]
                 let mut j = node_idx + 2
                 while j < nodes.length() {
@@ -95,7 +102,6 @@ fn match_state(nodes : Array[AST], node_idx : Int, path : String, path_idx : Int
                 }
               }
             }
-          }
           _ => ()
         }
       }
@@ -113,18 +119,16 @@ fn match_state(nodes : Array[AST], node_idx : Int, path : String, path_idx : Int
       let mut i = 0
       while i < elements.length() {
         match elements[i] {
-          CharClassElement::Single(sc) => {
+          CharClassElement::Single(sc) =>
             if c == sc {
               found = true
               break
             }
-          }
-          CharClassElement::Range(start, end) => {
+          CharClassElement::Range(start, end) =>
             if c >= start && c <= end {
               found = true
               break
             }
-          }
         }
         i = i + 1
       }

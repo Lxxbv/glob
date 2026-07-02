@@ -27,7 +27,7 @@
 
 在你的 MoonBit 项目的 `moon.mod` 中声明对该模块的依赖。如果是本地模块，可以直接在 `moon.pkg` 中导入：
 
-```moonbit
+```moonbit nocheck
 import {
   "caassien/glob"
 }
@@ -38,7 +38,8 @@ import {
 ### 1. 作为库使用
 
 #### 基础模式匹配
-```moonbit
+```moonbit nocheck
+///|
 fn example() {
   // 一次性匹配（适合低频调用）
   match @glob.match_pattern("src/**/*.mbt", "src/core/parser.mbt") {
@@ -49,7 +50,8 @@ fn example() {
 ```
 
 #### 编译模式匹配（推荐用于高频/循环匹配）
-```moonbit
+```moonbit nocheck
+///|
 fn example_compiled() {
   // 编译模式为 AST，避免重复解析的开销
   match @glob.compile("src/**/*.mbt") {

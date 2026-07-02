@@ -1,10 +1,12 @@
 // AST Parser for Glob patterns.
 
+///|
 priv struct Parser {
   tokens : Array[Token]
   mut index : Int
 }
 
+///|
 /// Converts a flat array of Tokens into a hierarchical AST.
 pub fn parse(tokens : Array[Token]) -> Result[AST, GlobError] {
   if tokens.length() == 0 {
@@ -14,6 +16,7 @@ pub fn parse(tokens : Array[Token]) -> Result[AST, GlobError] {
   parser.parse_seq()
 }
 
+///|
 fn Parser::parse_seq(self : Parser) -> Result[AST, GlobError] {
   let nodes : Array[AST] = []
   while self.index < self.tokens.length() {
@@ -38,18 +41,16 @@ fn Parser::parse_seq(self : Parser) -> Result[AST, GlobError] {
         nodes.push(AST::GlobStar)
         self.index = self.index + 1
       }
-      Token::LBrace => {
+      Token::LBrace =>
         match self.parse_brace() {
           Ok(brace_ast) => nodes.push(brace_ast)
           Err(err) => return Err(err)
         }
-      }
-      Token::LBracket => {
+      Token::LBracket =>
         match self.parse_bracket() {
           Ok(bracket_ast) => nodes.push(bracket_ast)
           Err(err) => return Err(err)
         }
-      }
       _ => {
         nodes.push(AST::Text(token_to_string(tok)))
         self.index = self.index + 1
@@ -63,12 +64,13 @@ fn Parser::parse_seq(self : Parser) -> Result[AST, GlobError] {
   }
 }
 
+///|
 fn Parser::parse_brace(self : Parser) -> Result[AST, GlobError] {
   self.index = self.index + 1 // Consume LBrace
   let options : Array[Array[AST]] = []
   while self.index < self.tokens.length() {
     match self.parse_seq() {
-      Ok(opt) => {
+      Ok(opt) =>
         if self.index < self.tokens.length() {
           let tok = self.tokens[self.index]
           if tok == Token::Comma {
@@ -84,13 +86,13 @@ fn Parser::parse_brace(self : Parser) -> Result[AST, GlobError] {
         } else {
           return Err(GlobError::UnclosedBrace)
         }
-      }
       Err(err) => return Err(err)
     }
   }
   Err(GlobError::UnclosedBrace)
 }
 
+///|
 fn Parser::parse_bracket(self : Parser) -> Result[AST, GlobError] {
   self.index = self.index + 1 // Consume LBracket
   if self.index >= self.tokens.length() {
@@ -117,6 +119,9 @@ fn Parser::parse_bracket(self : Parser) -> Result[AST, GlobError] {
         self.index = self.index + 1
       }
       Token::Range(start, end) => {
+        if start > end {
+          return Err(GlobError::InvalidRange)
+        }
         elements.push(CharClassElement::Range(start, end))
         self.index = self.index + 1
       }
@@ -124,7 +129,9 @@ fn Parser::parse_bracket(self : Parser) -> Result[AST, GlobError] {
         let s = token_to_string(tok)
         let mut j = 0
         while j < s.length() {
-          elements.push(CharClassElement::Single(s[j].to_int().unsafe_to_char()))
+          elements.push(
+            CharClassElement::Single(s[j].to_int().unsafe_to_char()),
+          )
           j = j + 1
         }
         self.index = self.index + 1
@@ -134,6 +141,7 @@ fn Parser::parse_bracket(self : Parser) -> Result[AST, GlobError] {
   Err(GlobError::UnclosedBracket)
 }
 
+///|
 fn ast_to_array(ast : AST) -> Array[AST] {
   match ast {
     AST::Seq(arr) => arr
@@ -141,6 +149,7 @@ fn ast_to_array(ast : AST) -> Array[AST] {
   }
 }
 
+///|
 fn token_to_string(tok : Token) -> String {
   match tok {
     Token::Text(s) => s

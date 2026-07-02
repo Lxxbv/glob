@@ -1,5 +1,6 @@
 // Lexical analyzer for Glob patterns.
 
+///|
 /// Tokenizes a glob pattern string into a sequence of Tokens.
 pub fn tokenize(pattern : String) -> Result[Array[Token], GlobError] {
   let tokens : Array[Token] = []
@@ -39,21 +40,21 @@ pub fn tokenize(pattern : String) -> Result[Array[Token], GlobError] {
           tokens.push(Token::Char(c))
         }
         i = i + 1
-      } else {
         // Check for range, e.g. 'a-z'
-        if i + 2 < len && pattern[i + 1].to_int().unsafe_to_char() == '-' && pattern[i + 2].to_int().unsafe_to_char() != ']' {
-          let start = c
-          let end = pattern[i + 2].to_int().unsafe_to_char()
-          tokens.push(Token::Range(start, end))
-          i = i + 3
-        } else {
-          tokens.push(Token::Char(c))
-          i = i + 1
-        }
+      } else if i + 2 < len &&
+        pattern[i + 1].to_int().unsafe_to_char() == '-' &&
+        pattern[i + 2].to_int().unsafe_to_char() != ']' {
+        let start = c
+        let end = pattern[i + 2].to_int().unsafe_to_char()
+        tokens.push(Token::Range(start, end))
+        i = i + 3
+      } else {
+        tokens.push(Token::Char(c))
+        i = i + 1
       }
     } else {
       match c {
-        '\\' => {
+        '\\' =>
           if i + 1 < len {
             current_text.write_char(pattern[i + 1].to_int().unsafe_to_char())
             i = i + 2
@@ -61,7 +62,6 @@ pub fn tokenize(pattern : String) -> Result[Array[Token], GlobError] {
             current_text.write_char('\\')
             i = i + 1
           }
-        }
         '*' => {
           flush_text()
           if i + 1 < len && pattern[i + 1].to_int().unsafe_to_char() == '*' {

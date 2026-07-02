@@ -1,0 +1,67 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "caassien/glob"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn compile(String) -> Result[AST, GlobError]
+
+pub fn filter(String, Array[String]) -> Result[Array[String], GlobError]
+
+pub fn filter_not(String, Array[String]) -> Result[Array[String], GlobError]
+
+pub fn match_path(AST, String) -> Bool
+
+pub fn match_pattern(String, String) -> Result[Bool, GlobError]
+
+pub fn parse(Array[Token]) -> Result[AST, GlobError]
+
+pub fn tokenize(String) -> Result[Array[Token], GlobError]
+
+// Errors
+
+// Types and methods
+pub enum AST {
+  Text(String)
+  Question
+  Star
+  GlobStar
+  CharClass(Bool, Array[CharClassElement])
+  Brace(Array[Array[AST]])
+  Seq(Array[AST])
+} derive(Eq, @debug.Debug)
+
+pub enum CharClassElement {
+  Single(Char)
+  Range(Char, Char)
+} derive(Eq, @debug.Debug)
+
+pub enum GlobError {
+  UnclosedBrace
+  UnclosedBracket
+  InvalidRange
+  EmptyPattern
+} derive(Eq, @debug.Debug)
+pub impl Show for GlobError
+
+pub enum Token {
+  Text(String)
+  Question
+  Star
+  GlobStar
+  LBrace
+  RBrace
+  Comma
+  LBracket
+  RBracket
+  Negate
+  Char(Char)
+  Range(Char, Char)
+} derive(Eq, @debug.Debug)
+
+// Type aliases
+
+// Traits
+

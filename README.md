@@ -68,7 +68,7 @@ fn example_compiled() {
 
 ### 2. 作为命令行工具使用
 
-你可以直接使用 `moon run` 运行内置的 CLI 工具：
+你可以直接使用 `moon run` 运行内置 of CLI 工具：
 
 ```bash
 # 格式：moon run cmd/main <pattern> <path>
@@ -81,7 +81,7 @@ moon run cmd/main "src/**/*.mbt" "src/lexer.json"
 
 ## 运行测试
 
-使用 MoonBit 内置 of 测试工具运行所有单元测试与规格测试：
+使用 MoonBit 内置的测试工具运行所有单元测试与规格测试：
 
 ```bash
 moon test
