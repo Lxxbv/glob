@@ -1,0 +1,7 @@
+// import {
+//   "caassien/glob" @lib,
+// }
+
+options(
+  "is-main": true,
+)
