@@ -1,6 +1,7 @@
-// import {
-//   "caassien/glob" @lib,
-// }
+import {
+  "caassien/glob",
+  "moonbitlang/core/env",
+}
 
 options(
   "is-main": true,
