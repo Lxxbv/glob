@@ -1,4 +1,3 @@
-# glob-mbt: 高性能文件路径通配符匹配与检索库
 
 `glob-mbt` 是一个专门为 MoonBit 语言设计的高性能、零依赖路径通配符（Glob）匹配与文件检索库。类似于 Go 语言的 `path/filepath.Match` 和 JavaScript 生态的 `picomatch`/`minimatch`。
 
