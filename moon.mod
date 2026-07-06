@@ -11,14 +11,14 @@
 
 name = "Lxxbv/glob"
 
-version = "0.1.0"
+version = "0.1.1"
 
 readme = "README.mbt.md"
 
-repository = ""
+repository = "https://github.com/Lxxbv/glob"
 
 license = "Apache-2.0"
 
-keywords = [ ]
+keywords = [ "glob", "pattern-matching", "wildcard", "filepath", "path" ]
 
-description = ""
+description = "高性能、零依赖的通配符路径匹配与检索库，专为 MoonBit 语言设计并针对 Wasm / Native 双端进行了深度优化。"
