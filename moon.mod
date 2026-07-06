@@ -9,7 +9,7 @@
 //   "moonbitlang/x@0.4.6",
 // }
 
-name = "caassien/glob"
+name = "Lxxbv/glob"
 
 version = "0.1.0"
 

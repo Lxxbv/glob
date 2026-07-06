@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "caassien/glob"
+package "Lxxbv/glob"
 
 import {
   "moonbitlang/core/debug",

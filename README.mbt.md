@@ -28,7 +28,7 @@
 
 ```moonbit nocheck
 import {
-  "caassien/glob"
+  "Lxxbv/glob"
 }
 ```
 

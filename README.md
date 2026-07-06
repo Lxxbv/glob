@@ -28,7 +28,7 @@
 
 ```moonbit
 import {
-  "caassien/glob"
+  "Lxxbv/glob"
 }
 ```
 
