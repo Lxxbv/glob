@@ -65,17 +65,32 @@ fn example_compiled() {
 }
 ```
 
+#### 真实文件检索
+```moonbit
+fn example_glob() {
+  // 检索当前目录下所有 .mbt 文件
+  match @glob.glob(".", "**/*.mbt") {
+    Ok(paths) => {
+      for path in paths {
+        println("Found: \{path}")
+      }
+    }
+    Err(err) => println("Error: \{err}")
+  }
+}
+```
+
 ### 2. 作为命令行工具使用
 
-你可以直接使用 `moon run` 运行内置 of CLI 工具：
+你可以直接使用 `moon run` 运行内置的 CLI 工具来进行文件通配符检索：
 
 ```bash
-# 格式：moon run cmd/main <pattern> <path>
-moon run cmd/main "src/**/*.mbt" "src/lexer.mbt"
-# 输出: Match!
+# 格式：moon run cmd/main <pattern> [directory]
+# 默认在当前目录进行检索
+moon run cmd/main "**/*.mbt"
 
-moon run cmd/main "src/**/*.mbt" "src/lexer.json"
-# 输出: No match.
+# 也可以指定检索目录
+moon run cmd/main "*.mbt" "cmd/main"
 ```
 
 ## 运行测试
@@ -85,6 +100,15 @@ moon run cmd/main "src/**/*.mbt" "src/lexer.json"
 ```bash
 moon test
 ```
+
+## 性能基准 (Benchmarks)
+
+本项目在最新工具链下执行了性能测试 (`moon bench`)，结果如下：
+
+* **`bench compile`** (编译模式字符串): **~121.93 ns**
+* **`bench match_path`** (基于编译后的 AST 进行路径匹配): **~104.61 ns**
+* **`bench glob search`** (真实文件检索及过滤): **~14.69 ms**
+
 
 ## 与 justjavac/glob (mooncakes.io 现有库) 的差异与扩展
 
