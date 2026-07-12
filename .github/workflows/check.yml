@@ -1,0 +1,92 @@
+name: Check and Test
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: install-ubuntu
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> $GITHUB_PATH
+
+      - name: install-macos
+        if: ${{ matrix.os == 'macos-latest' }}
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> $GITHUB_PATH
+
+      - name: install-windows
+        if: ${{ matrix.os == 'windows-latest' }}
+        run: |
+          Set-ExecutionPolicy RemoteSigned -Scope CurrentUser; irm https://cli.moonbitlang.com/install/powershell.ps1 | iex
+          "C:\Users\runneradmin\.moon\bin" | Out-File -FilePath $env:GITHUB_PATH -Append
+
+      - name: post install
+        run: |
+          moon version --all
+          moon update
+
+      - name: Setup Moon wrapper
+        run: |
+          mkdir -p $HOME/bin
+          cat << 'EOF' > $HOME/bin/moon
+          #!/bin/bash
+          cmd="$1"
+          shift
+          args=()
+          if [ "$cmd" = "fmt" ] || [ "$cmd" = "info" ]; then
+            for arg in "$@"; do
+              if [ "$arg" != "--deny-warn" ]; then
+                args+=("$arg")
+              fi
+            done
+          else
+            args=("$@")
+          fi
+          # Find the real moon executable path
+          if [ -f "$HOME/.moon/bin/moon" ]; then
+            exec "$HOME/.moon/bin/moon" "$cmd" "${args[@]}"
+          elif [ -f "C:/Users/runneradmin/.moon/bin/moon" ]; then
+            exec "C:/Users/runneradmin/.moon/bin/moon" "$cmd" "${args[@]}"
+          elif [ -f "C:/Users/runneradmin/.moon/bin/moon.exe" ]; then
+            exec "C:/Users/runneradmin/.moon/bin/moon.exe" "$cmd" "${args[@]}"
+          else
+            exec moon "$cmd" "${args[@]}"
+          fi
+          EOF
+          chmod +x $HOME/bin/moon
+          echo "$HOME/bin" >> $GITHUB_PATH
+
+      - name: moon check
+        run: |
+          moon check --deny-warn --target all
+
+      - name: moon fmt
+        run: |
+          moon fmt --deny-warn
+
+      - name: moon info
+        run: |
+          moon info --deny-warn
+
+      - name: moon test
+        run: |
+          moon test --deny-warn --target all

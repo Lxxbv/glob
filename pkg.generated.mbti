@@ -12,6 +12,8 @@ pub fn filter(String, Array[String]) -> Result[Array[String], GlobError]
 
 pub fn filter_not(String, Array[String]) -> Result[Array[String], GlobError]
 
+pub fn glob(String, String) -> Result[Array[String], GlobError]
+
 pub fn match_path(AST, String) -> Bool
 
 pub fn match_pattern(String, String) -> Result[Bool, GlobError]

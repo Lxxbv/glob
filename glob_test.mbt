@@ -46,3 +46,34 @@ test "public api filter" {
     ),
   )
 }
+
+///|
+test "public api glob filesystem search" {
+  let result = @glob.glob(".", "cmd/**/*.mbt")
+  match result {
+    Ok(paths) => {
+      paths.sort()
+      debug_inspect(paths, content="[\"cmd/main/main.mbt\"]")
+    }
+    Err(err) => fail("glob search failed: \{err}")
+  }
+
+  let result2 = @glob.glob(".", "glob*.mbt")
+  match result2 {
+    Ok(paths) => {
+      paths.sort()
+      debug_inspect(
+        paths,
+        content=(
+          #|[
+          #|  "glob.mbt",
+          #|  "glob_test.mbt",
+          #|  "glob_wbtest.mbt",
+          #|  "glob_bench_test.mbt",
+          #|]
+        ),
+      )
+    }
+    Err(err) => fail("glob search failed: \{err}")
+  }
+}
