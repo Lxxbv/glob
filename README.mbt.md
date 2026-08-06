@@ -28,6 +28,7 @@
 在你的 MoonBit 项目的 `moon.mod` 中声明对该模块的依赖。如果是本地模块，可以直接在 `moon.pkg` 中导入：
 
 ```moonbit nocheck
+///|
 import {
   "Lxxbv/glob"
 }
