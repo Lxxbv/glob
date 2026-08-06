@@ -13,7 +13,19 @@ pub fn parse(tokens : Array[Token]) -> Result[AST, GlobError] {
     return Err(GlobError::EmptyPattern)
   }
   let parser = Parser::{ tokens, index: 0 }
-  parser.parse_seq()
+  match parser.parse_seq() {
+    Err(err) => Err(err)
+    Ok(ast) =>
+      if parser.index == parser.tokens.length() {
+        Ok(ast)
+      } else {
+        match parser.tokens[parser.index] {
+          Token::Comma => Err(GlobError::UnexpectedComma)
+          Token::RBrace => Err(GlobError::UnexpectedClosingBrace)
+          token => Err(GlobError::UnexpectedToken(token_to_string(token)))
+        }
+      }
+  }
 }
 
 ///|

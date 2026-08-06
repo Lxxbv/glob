@@ -1,4 +1,4 @@
-// Public API of the caassien/glob package.
+// Public API of the Lxxbv/glob package.
 
 ///|
 /// Compiles a glob pattern string into an AST.
@@ -62,42 +62,82 @@ pub fn filter_not(
 }
 
 ///|
+fn filesystem_error(err : @fs.IOError) -> GlobError {
+  GlobError::FilesystemError(err.to_repr().to_string())
+}
+
+///|
 fn list_relative_paths(
   dir : String,
   prefix : String,
   result : Array[String],
-) -> Unit raise @fs.IOError {
+  options : GlobOptions,
+) -> Result[Unit, GlobError] {
   let current_dir = if prefix.is_empty() { dir } else { dir + "/" + prefix }
-  let entries = @fs.read_dir(current_dir)
+  let entries = @fs.read_dir(current_dir) catch {
+    err => return Err(filesystem_error(err))
+  }
   for entry in entries {
     let rel_path = if prefix.is_empty() { entry } else { prefix + "/" + entry }
     let full_path = dir + "/" + rel_path
-    result.push(rel_path)
-    try {
-      if @fs.is_dir(full_path) {
-        list_relative_paths(dir, rel_path, result)
+    let is_directory = @fs.is_dir(full_path) catch {
+      err => return Err(filesystem_error(err))
+    }
+    let is_hidden = is_hidden_path(rel_path)
+    let depth = path_depth(rel_path)
+    let within_depth = match options.max_depth {
+      None => true
+      Some(max_depth) => depth <= max_depth
+    }
+    if (!is_hidden || options.include_hidden) && within_depth {
+      if (is_directory && options.include_directories) ||
+        (!is_directory && options.include_files) {
+        result.push(rel_path)
       }
-    } catch {
-      _ => ()
+    }
+    let can_recurse = match options.max_depth {
+      None => true
+      Some(max_depth) => depth < max_depth
+    }
+    if is_directory && can_recurse && (!is_hidden || options.include_hidden) {
+      match list_relative_paths(dir, rel_path, result, options) {
+        Ok(_) => ()
+        Err(err) => return Err(err)
+      }
     }
   }
+  Ok(())
 }
 
 ///|
 /// Searches the filesystem starting from `dir` for paths matching the glob `pattern`.
 /// The returned paths are relative to `dir`.
 pub fn glob(dir : String, pattern : String) -> Result[Array[String], GlobError] {
+  glob_with_options(dir, pattern, GlobOptions::default())
+}
+
+///|
+/// Searches the filesystem using explicit filtering and traversal options.
+pub fn glob_with_options(
+  dir : String,
+  pattern : String,
+  options : GlobOptions,
+) -> Result[Array[String], GlobError] {
   match compile(pattern) {
     Ok(ast) => {
       let paths = []
-      list_relative_paths(dir, "", paths) catch {
-        _ => return Ok([])
+      match list_relative_paths(dir, "", paths, options) {
+        Ok(_) => ()
+        Err(err) => return Err(err)
       }
       let result = []
       for path in paths {
         if match_path(ast, path) {
           result.push(path)
         }
+      }
+      if options.sort_results {
+        result.sort()
       }
       Ok(result)
     }

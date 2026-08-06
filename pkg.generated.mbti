@@ -6,19 +6,57 @@ import {
 }
 
 // Values
+pub fn analyze(String) -> Result[PatternStats, GlobError]
+
+pub fn basename(String) -> String
+
+pub fn classify_paths(AST, Array[String]) -> MatchReport
+
 pub fn compile(String) -> Result[AST, GlobError]
+
+pub fn compile_many(Array[String]) -> Result[Array[AST], GlobError]
+
+pub fn dirname(String) -> String
+
+pub fn extension(String) -> String?
 
 pub fn filter(String, Array[String]) -> Result[Array[String], GlobError]
 
+pub fn filter_compiled(AST, Array[String]) -> Array[String]
+
 pub fn filter_not(String, Array[String]) -> Result[Array[String], GlobError]
 
+pub fn filter_not_compiled(AST, Array[String]) -> Array[String]
+
 pub fn glob(String, String) -> Result[Array[String], GlobError]
+
+pub fn glob_with_options(String, String, GlobOptions) -> Result[Array[String], GlobError]
+
+pub fn has_recursive_wildcard(String) -> Result[Bool, GlobError]
+
+pub fn is_hidden_path(String) -> Bool
+
+pub fn is_path_pattern(String) -> Result[Bool, GlobError]
+
+pub fn literal_prefix(String) -> Result[String, GlobError]
+
+pub fn match_all(Array[String], String) -> Result[Bool, GlobError]
+
+pub fn match_any(Array[String], String) -> Result[Bool, GlobError]
 
 pub fn match_path(AST, String) -> Bool
 
 pub fn match_pattern(String, String) -> Result[Bool, GlobError]
 
+pub fn normalize_path(String) -> String
+
 pub fn parse(Array[Token]) -> Result[AST, GlobError]
+
+pub fn path_depth(String) -> Int
+
+pub fn separator_count(String) -> Result[Int, GlobError]
+
+pub fn static_segments(String) -> Result[Array[String], GlobError]
 
 pub fn tokenize(String) -> Result[Array[Token], GlobError]
 
@@ -45,8 +83,46 @@ pub enum GlobError {
   UnclosedBracket
   InvalidRange
   EmptyPattern
+  UnexpectedComma
+  UnexpectedClosingBrace
+  UnexpectedToken(String)
+  InvalidMaxDepth
+  NonLiteralSegment
+  FilesystemError(String)
 } derive(Eq, @debug.Debug)
 pub impl Show for GlobError
+
+pub(all) struct GlobOptions {
+  include_files : Bool
+  include_directories : Bool
+  include_hidden : Bool
+  max_depth : Int?
+  sort_results : Bool
+} derive(Eq, @debug.Debug)
+pub fn GlobOptions::default() -> Self
+pub fn GlobOptions::directories_only(Self) -> Self
+pub fn GlobOptions::files_only(Self) -> Self
+pub fn GlobOptions::sorted(Self) -> Self
+pub fn GlobOptions::with_max_depth(Self, Int) -> Result[Self, GlobError]
+pub fn GlobOptions::without_hidden(Self) -> Self
+
+pub(all) struct MatchReport {
+  matched : Array[String]
+  unmatched : Array[String]
+} derive(Eq, @debug.Debug)
+
+pub(all) struct PatternStats {
+  literal_chars : Int
+  star_count : Int
+  globstar_count : Int
+  question_count : Int
+  char_class_count : Int
+  brace_group_count : Int
+  escaped_char_count : Int
+} derive(Eq, @debug.Debug)
+pub fn PatternStats::has_magic(Self) -> Bool
+pub fn PatternStats::is_literal(Self) -> Bool
+pub fn PatternStats::magic_count(Self) -> Int
 
 pub enum Token {
   Text(String)

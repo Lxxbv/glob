@@ -37,12 +37,15 @@ You can browse and install extra skills here:
   change does not bring the visible changes to the external package users, it is
   typically a safe refactoring.
 
-- In the last step, run `moon info && moon fmt` to update the interface and
-  format the code. Check the diffs of `.mbti` file to see if the changes are
-  expected.
+- In the last step, run `moon fmt`, `moon clean`, and `moon info` serially to
+  update formatting and generated interfaces. Check the `.mbti` diffs to see
+  whether public API changes are expected.
 
 - Run `moon test` to check tests pass. MoonBit supports snapshot testing; when
   changes affect outputs, run `moon test --update` to refresh snapshots.
+
+- Run MoonBit commands serially in one checkout; concurrent targets can contend
+  on `_build` cache databases. Windows native builds require a C compiler.
 
 - Prefer `assert_eq` or `assert_true(pattern is Pattern(...))` for results that
   are stable or very unlikely to change. For snapshot tests that record

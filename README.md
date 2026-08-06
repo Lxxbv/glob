@@ -1,14 +1,15 @@
 
-`glob-mbt` 是一个专门为 MoonBit 语言设计的高性能、零依赖路径通配符（Glob）匹配与文件检索库。类似于 Go 语言的 `path/filepath.Match` 和 JavaScript 生态的 `picomatch`/`minimatch`。
+`glob-mbt` 是一个专门为 MoonBit 语言设计的路径通配符（Glob）匹配与文件检索库，核心匹配逻辑轻量，文件系统检索依赖 `moonbitlang/x/fs`。它类似于 Go 语言的 `path/filepath.Match` 和 JavaScript 生态的 `picomatch`/`minimatch`。
 
 本项目针对 WebAssembly (Wasm) 与 Native 目标进行了双重优化，适用于构建工具、静态网站生成器、CLI 文件检索工具以及后台服务等场景。
 
 ## 特性
 
 * **完整语法支持**：支持 `*`、`?`、`**`（多级目录）、`[char-class]`（字符集/范围）以及 `{group1,group2}`（花括号展开）。
-* **高性能编译器架构**：采用词法分析（Lexer）与语法分析（Parser）构建抽象语法树（AST），并通过回溯匹配引擎进行剪枝优化，避免无效路径回溯。
-* **零外部依赖**：仅依赖 MoonBit 标准库，具有极佳的可移植性。
+* **可复用编译架构**：采用词法分析（Lexer）与语法分析（Parser）构建抽象语法树（AST），编译后的 AST 可复用，匹配器使用递归回溯并限制通配符跨目录范围。
+* **依赖边界清晰**：核心匹配逻辑使用 MoonBit 标准能力，文件系统检索明确依赖 `moonbitlang/x/fs`；不隐藏外部依赖。
 * **命令行工具 (CLI)**：内置 `moon-glob` 实用工具，可直接在终端中进行通配符路径检索。
+* **显式错误处理**：空模式、未闭合结构、非法范围、顶层逗号和文件系统访问失败均通过 `GlobError` 返回。
 
 ## 支持的通配符语法
 
@@ -93,6 +94,25 @@ moon run cmd/main "**/*.mbt"
 moon run cmd/main "*.mbt" "cmd/main"
 ```
 
+## 扩展 API
+
+除基础的 `compile` / `match` 外，库还提供面向真实项目的可组合 API：
+
+```moonbit
+let options = @glob.GlobOptions::default()
+  .without_hidden()
+  .sorted()
+  .with_max_depth(4)?
+let files = @glob.glob_with_options(".", "**/*.mbt", options)?
+
+let stats = @glob.analyze("src/**/{*.mbt,*.md}")?
+let compiled = @glob.compile_many(["src/**/*.mbt", "tests/**/*.mbt"])?
+let matched = @glob.match_any(compiled, "src/core/parser.mbt")
+```
+
+`GlobOptions` 可控制文件/目录结果、隐藏项、最大深度和排序；`analyze` 用于读取模式复杂度；`compile_many`、`match_any`、`match_all` 和 `classify_paths` 用于批量匹配；`normalize_path`、`basename`、`dirname`、`extension` 等函数用于跨平台路径处理。
+
+
 ## 运行测试
 
 使用 MoonBit 内置的测试工具运行所有单元测试与规格测试：
@@ -103,11 +123,11 @@ moon test
 
 ## 性能基准 (Benchmarks)
 
-本项目在最新工具链下执行了性能测试 (`moon bench`)，结果如下：
+运行性能基准请使用 `moon bench`。基准结果会随 MoonBit 工具链、操作系统、CPU、文件系统和输入规模变化，因此仓库不固定承诺单一机器上的纳秒/毫秒数字。当前基准覆盖编译、已编译 AST 匹配和真实文件检索：
 
-* **`bench compile`** (编译模式字符串): **~121.93 ns**
-* **`bench match_path`** (基于编译后的 AST 进行路径匹配): **~104.61 ns**
-* **`bench glob search`** (真实文件检索及过滤): **~14.69 ms**
+```bash
+moon bench
+```
 
 
 ## 与 justjavac/glob (mooncakes.io 现有库) 的差异与扩展
@@ -119,12 +139,28 @@ moon test
    - `glob-mbt` 完整支持了 `*`、`?`、`**`、字符集 `[abc]` / `[a-z]`、否定字符集 `[!abc]`、花括号展开组 `{a,b}` 以及转义字符 `\`，语法表现力完全对标主流构建工具。
 2. **底层的编译器架构设计**：
    - `justjavac/glob` 基于字符逐个比对的迭代逻辑，未将其解析为抽象语法树（AST）。
-   - `glob-mbt` 采用标准的**词法分析（Lexer）** ➡️ **语法分析（Parser）** ➡️ **抽象语法树（AST）** ➡️ **带剪枝的状态机回溯匹配引擎（Matcher）** 编译系统，设计更具学术及工程参考价值。
+   - `glob-mbt` 采用标准的**词法分析（Lexer）** ➡️ **语法分析（Parser）** ➡️ **抽象语法树（AST）** ➡️ **递归回溯匹配引擎（Matcher）** 编译系统，重点展示清晰的语法边界与可复用 API。
 3. **高频检索性能优化（预编译）**：
-   - `glob-mbt` 支持将模式字符串预编译为 AST 结构，在高频循环匹配场景中避免了重复解析的开销，性能表现大幅提升。
+   - `glob-mbt` 支持将模式字符串预编译为 AST 结构，在高频循环匹配场景中避免重复解析；实际性能应使用仓库基准在目标环境中复测。
 4. **丰富的批处理 API 与独立 CLI 工具**：
    - `glob-mbt` 额外提供了面向路径列表批量过滤的 `filter` 与 `filter_not` API，并内置了开箱即用的终端 CLI 检索工具。
 
 ## 许可证
 
 本项目采用 [Apache-2.0 License](LICENSE) 许可证。
+
+## 工程验证
+
+本地提交前建议串行执行以下命令：
+
+```bash
+moon fmt
+moon clean
+moon info
+moon check --deny-warn --target all
+moon build --target all
+moon test --deny-warn --target all
+git diff --check
+```
+
+Windows 的 `native` 目标需要 C 编译器；CI 使用 MSYS2 UCRT64 与 GCC，并覆盖 Linux、macOS、Windows。CI 配置见 [`.github/workflows/check.yml`](.github/workflows/check.yml)。

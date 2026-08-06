@@ -90,6 +90,18 @@ test "parse invalid range" {
 }
 
 ///|
+test "parse rejects top-level comma" {
+  let result = parse(tokenize("a,b").unwrap())
+  debug_inspect(result, content="Err(UnexpectedComma)")
+}
+
+///|
+test "parse rejects unexpected closing tokens" {
+  let brace_result = parse(tokenize("a}").unwrap())
+  debug_inspect(brace_result, content="Err(UnexpectedClosingBrace)")
+}
+
+///|
 test "match basic text" {
   let ast = parse(tokenize("hello").unwrap()).unwrap()
   debug_inspect(match_path(ast, "hello"), content="true")

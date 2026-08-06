@@ -22,6 +22,15 @@ test "public api brace matching" {
 }
 
 ///|
+test "public api brace alternatives may be empty" {
+  let empty = @glob.match_pattern("{,a}", "")
+  debug_inspect(empty, content="Ok(true)")
+
+  let value = @glob.match_pattern("{a,}", "a")
+  debug_inspect(value, content="Ok(true)")
+}
+
+///|
 test "public api filter" {
   let paths = [
     "src/main.mbt", "src/utils.rs", "docs/index.md", "src/core/parser.mbt",
@@ -53,7 +62,10 @@ test "public api glob filesystem search" {
   match result {
     Ok(paths) => {
       paths.sort()
-      debug_inspect(paths, content="[\"cmd/main/main.mbt\"]")
+      debug_inspect(
+        paths,
+        content="[\"cmd/main/main.mbt\", \"cmd/main/main_wbtest.mbt\"]",
+      )
     }
     Err(err) => fail("glob search failed: \{err}")
   }
@@ -70,10 +82,20 @@ test "public api glob filesystem search" {
           #|  "glob_test.mbt",
           #|  "glob_wbtest.mbt",
           #|  "glob_bench_test.mbt",
+          #|  "glob_options_test.mbt",
           #|]
         ),
       )
     }
     Err(err) => fail("glob search failed: \{err}")
+  }
+}
+
+///|
+test "public api reports filesystem errors" {
+  let result = @glob.glob("__glob_missing_directory_for_test__", "**/*.mbt")
+  match result {
+    Err(@glob.GlobError::FilesystemError(_)) => ()
+    _ => fail("glob should report a missing directory")
   }
 }
