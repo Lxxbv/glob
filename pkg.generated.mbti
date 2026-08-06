@@ -142,4 +142,3 @@ pub enum Token {
 // Type aliases
 
 // Traits
-
