@@ -30,7 +30,7 @@
 ```moonbit nocheck
 ///|
 import {
-  "Lxxbv/glob"
+  "Lxxbv/glob",
 }
 ```
 
