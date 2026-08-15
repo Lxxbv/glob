@@ -39,5 +39,5 @@ git diff --check
 
 - GitHub `main`、GitLink `master` 均由 `Lxxbv` 推送，远程默认分支已核对。
 - `Lxxbv/glob@0.2.3` 已通过 `moon publish` 发布并完成包内 `moon check` 校验。
-- GitHub 最新 CI 曾因滚动工具链与 MSYS2 缓存竞争失败；修订后的 CI 固定 `MOONBIT_INSTALL_VERSION=0.10.3` 并关闭 MSYS2 缓存，需以新提交的三平台结果为准。
+- GitHub 最新 CI 曾因滚动工具链、错误的安装器版本标识与 MSYS2 缓存竞争失败；修订后的 CI 固定 `MOONBIT_INSTALL_VERSION=0.1.20260703`（对应 `moonc v0.10.3`）并关闭 MSYS2 缓存，需以新提交的三平台结果为准。
 - 提交前检查 `git status --short`、`git diff --check` 和 `git log --format='%an <%ae>'`；不得把历史缓存账号、自动化机器人或虚拟贡献者写入新的提交。

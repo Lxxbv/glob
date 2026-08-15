@@ -17,3 +17,6 @@
 
 - Pin CI and documented installation commands to MoonBit 0.10.3 for reproducible formatting and interface checks.
 - Disable the MSYS2 package cache in the three-OS matrix to avoid concurrent cache reservation failures.
+## 0.2.4
+
+- Corrected the CI installer pin to release `0.1.20260703`, which contains `moonc v0.10.3`.

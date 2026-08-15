@@ -11,7 +11,8 @@ permissions:
   contents: read
 
 env:
-  MOONBIT_INSTALL_VERSION: 0.10.3
+  # Installer release 0.1.20260703 contains moonc v0.10.3.
+  MOONBIT_INSTALL_VERSION: 0.1.20260703
 
 jobs:
   build:
