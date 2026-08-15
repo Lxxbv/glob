@@ -188,7 +188,7 @@ println(result.summary())
 - `cmd/main`：可直接运行的 CLI。
 - `.github/workflows/check.yml`：Linux、macOS、Windows 的 check/build/test/fmt/info CI，Windows native 使用 MSYS2 UCRT64 GCC。
 
-项目当前以 20 个生产 `.mbt` 文件、3396 行生产实现和 73 个自动化测试为本地验收基线；测试代码与生成的 `.mbti` 接口文件不计入生产代码规模。有效非空非注释实现约 2928 行，后续扩展只增加真实功能，不以注释或重复代码填充规模。
+项目当前以 20 个生产 `.mbt` 文件、3780 行生产实现和 75 个自动化测试为本地验收基线；测试代码与生成的 `.mbti` 接口文件不计入生产代码规模。规模统计来自当前工作树，后续扩展只增加真实功能，不以注释或重复代码填充规模。
 
 ## 开源合规
 
