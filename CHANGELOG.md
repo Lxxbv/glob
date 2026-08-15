@@ -20,3 +20,7 @@
 ## 0.2.4
 
 - Corrected the CI installer pin to release `0.1.20260703`, which contains `moonc v0.10.3`.
+## 0.2.5
+
+- Use the currently available MoonBit CI release and keep format/interface generation independent from compiler-version snapshots.
+- Keep `moon check`, `moon build`, `moon test`, and whitespace validation as strict CI gates on all three operating systems.
