@@ -24,3 +24,7 @@
 
 - Use the currently available MoonBit CI release and keep format/interface generation independent from compiler-version snapshots.
 - Keep `moon check`, `moon build`, `moon test`, and whitespace validation as strict CI gates on all three operating systems.
+## 0.2.6
+
+- Use the official rolling installer in CI because historical installer releases are no longer downloadable.
+- Print the exact CI toolchain version while retaining the local MoonBit 0.10.3 acceptance baseline.

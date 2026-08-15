@@ -10,10 +10,6 @@ on:
 permissions:
   contents: read
 
-env:
-  # Current available installer release; local acceptance remains validated on moonc v0.10.3.
-  MOONBIT_INSTALL_VERSION: 0.1.20260807
-
 jobs:
   build:
     strategy:
