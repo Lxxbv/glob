@@ -123,16 +123,18 @@ pub fn glob_with_options(
   pattern : String,
   options : GlobOptions,
 ) -> Result[Array[String], GlobError] {
-  match compile(pattern) {
-    Ok(ast) => {
+  match compile_pattern(pattern) {
+    Ok(compiled) => {
+      let plan = TraversalPlan::from_compiled(compiled)
       let paths = []
-      match list_relative_paths(dir, "", paths, options) {
+      let start_prefix = plan.start_prefix(dir)
+      match list_relative_paths(dir, start_prefix, paths, options) {
         Ok(_) => ()
         Err(err) => return Err(err)
       }
       let result = []
       for path in paths {
-        if match_path(ast, path) {
+        if plan.matches(path) {
           result.push(path)
         }
       }

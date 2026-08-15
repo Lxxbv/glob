@@ -24,8 +24,11 @@ test "compiled batch filtering returns a stable report" {
   let ast = @glob.compile("src/**/*.mbt").unwrap()
   let paths = ["src/main.mbt", "src/core/parser.mbt", "README.md"]
   let report = @glob.classify_paths(ast, paths)
-  assert_eq(report.matched, ["src/main.mbt", "src/core/parser.mbt"])
-  assert_eq(report.unmatched, ["README.md"])
+  assert_eq(report.matched.length(), 2)
+  assert_eq(report.matched[0], "src/main.mbt")
+  assert_eq(report.matched[1], "src/core/parser.mbt")
+  assert_eq(report.unmatched.length(), 1)
+  assert_eq(report.unmatched[0], "README.md")
 }
 
 ///|

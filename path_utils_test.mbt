@@ -12,8 +12,14 @@ test "path utilities normalize separators" {
 test "path utilities split names" {
   assert_eq(@glob.basename("src/core/main.mbt"), "main.mbt")
   assert_eq(@glob.dirname("src/core/main.mbt"), "src/core")
-  assert_eq(@glob.extension("src/core/main.mbt"), Some("mbt"))
-  assert_eq(@glob.extension("README"), None)
+  match @glob.extension("src/core/main.mbt") {
+    Some(extension) => assert_eq(extension, "mbt")
+    None => fail("extension should be present")
+  }
+  match @glob.extension("README") {
+    Some(_) => fail("README should not have an extension")
+    None => ()
+  }
 }
 
 ///|

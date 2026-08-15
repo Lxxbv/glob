@@ -17,10 +17,14 @@ test "pattern info validates and classifies paths" {
 
 ///|
 test "pattern info splits static path segments" {
-  assert_eq(@glob.static_segments("src/core/main.mbt").unwrap(), [
-    "src", "core", "main.mbt",
-  ])
-  assert_eq(@glob.static_segments("src/*.mbt").unwrap(), ["src"])
+  let full = @glob.static_segments("src/core/main.mbt").unwrap()
+  assert_eq(full.length(), 3)
+  assert_eq(full[0], "src")
+  assert_eq(full[1], "core")
+  assert_eq(full[2], "main.mbt")
+  let partial = @glob.static_segments("src/*.mbt").unwrap()
+  assert_eq(partial.length(), 1)
+  assert_eq(partial[0], "src")
   match @glob.static_segments("{a,b}.mbt") {
     Err(@glob.GlobError::NonLiteralSegment) => ()
     _ => fail("wildcard segments cannot be treated as static")

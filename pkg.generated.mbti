@@ -10,13 +10,29 @@ pub fn analyze(String) -> Result[PatternStats, GlobError]
 
 pub fn basename(String) -> String
 
+pub fn build_default_workload() -> GlobWorkload
+
+pub fn build_large_workload() -> GlobWorkload
+
+pub fn build_query(Array[String], Array[String]) -> Result[GlobQuery, GlobError]
+
+pub fn build_workload(Int, Int) -> Result[GlobWorkload, WorkloadError]
+
 pub fn classify_paths(AST, Array[String]) -> MatchReport
 
 pub fn compile(String) -> Result[AST, GlobError]
 
 pub fn compile_many(Array[String]) -> Result[Array[AST], GlobError]
 
+pub fn compile_pattern(String) -> Result[CompiledPattern, GlobError]
+
+pub fn compile_patterns(Array[String]) -> Result[Array[CompiledPattern], GlobError]
+
 pub fn dirname(String) -> String
+
+pub fn evaluate_workload(GlobWorkload) -> WorkloadResult
+
+pub fn explain_pattern(String) -> Result[PatternExplanation, GlobError]
 
 pub fn extension(String) -> String?
 
@@ -24,9 +40,13 @@ pub fn filter(String, Array[String]) -> Result[Array[String], GlobError]
 
 pub fn filter_compiled(AST, Array[String]) -> Array[String]
 
+pub fn filter_compiled_patterns(Array[CompiledPattern], Array[String]) -> Array[String]
+
 pub fn filter_not(String, Array[String]) -> Result[Array[String], GlobError]
 
 pub fn filter_not_compiled(AST, Array[String]) -> Array[String]
+
+pub fn filter_not_compiled_patterns(Array[CompiledPattern], Array[String]) -> Array[String]
 
 pub fn glob(String, String) -> Result[Array[String], GlobError]
 
@@ -44,6 +64,10 @@ pub fn match_all(Array[String], String) -> Result[Bool, GlobError]
 
 pub fn match_any(Array[String], String) -> Result[Bool, GlobError]
 
+pub fn match_compiled_all(Array[CompiledPattern], String) -> Bool
+
+pub fn match_compiled_any(Array[CompiledPattern], String) -> Bool
+
 pub fn match_path(AST, String) -> Bool
 
 pub fn match_pattern(String, String) -> Result[Bool, GlobError]
@@ -53,6 +77,8 @@ pub fn normalize_path(String) -> String
 pub fn parse(Array[Token]) -> Result[AST, GlobError]
 
 pub fn path_depth(String) -> Int
+
+pub fn query_paths(Array[String], Array[String], Array[String]) -> Result[QueryReport, GlobError]
 
 pub fn separator_count(String) -> Result[Int, GlobError]
 
@@ -73,10 +99,51 @@ pub enum AST {
   Seq(Array[AST])
 } derive(Eq, @debug.Debug)
 
+pub enum CacheError {
+  InvalidCapacity
+} derive(Eq, @debug.Debug)
+pub impl Show for CacheError
+
+pub(all) struct CacheStats {
+  entries : Int
+  capacity : Int
+  hits : Int
+  misses : Int
+  evictions : Int
+} derive(Eq, @debug.Debug)
+
+pub(all) struct CachedPattern {
+  source : String
+  compiled : CompiledPattern
+  hits : Int
+} derive(Eq, @debug.Debug)
+
 pub enum CharClassElement {
   Single(Char)
   Range(Char, Char)
 } derive(Eq, @debug.Debug)
+
+pub(all) struct CompiledPattern {
+  source : String
+  ast : AST
+  stats : PatternStats
+  prefix : String
+  separators : Int
+  recursive : Bool
+  segments : Int
+} derive(Eq, @debug.Debug)
+pub fn CompiledPattern::ast(Self) -> AST
+pub fn CompiledPattern::estimated_branches(Self) -> Int
+pub fn CompiledPattern::has_magic(Self) -> Bool
+pub fn CompiledPattern::has_recursive_wildcard(Self) -> Bool
+pub fn CompiledPattern::is_literal(Self) -> Bool
+pub fn CompiledPattern::literal_prefix(Self) -> String
+pub fn CompiledPattern::matches(Self, String) -> Bool
+pub fn CompiledPattern::pattern(Self) -> String
+pub fn CompiledPattern::segment_count(Self) -> Int
+pub fn CompiledPattern::separator_count(Self) -> Int
+pub fn CompiledPattern::stats(Self) -> PatternStats
+pub fn CompiledPattern::summary(Self) -> String
 
 pub enum GlobError {
   UnclosedBrace
@@ -106,9 +173,197 @@ pub fn GlobOptions::sorted(Self) -> Self
 pub fn GlobOptions::with_max_depth(Self, Int) -> Result[Self, GlobError]
 pub fn GlobOptions::without_hidden(Self) -> Self
 
+pub(all) struct GlobPipeline {
+  cache : PatternCache
+  includes : Array[String]
+  excludes : Array[String]
+  options : GlobOptions
+  limit : Int?
+} derive(Eq, @debug.Debug)
+pub fn GlobPipeline::exclude_count(Self) -> Int
+pub fn GlobPipeline::exclude_pattern(Self, String) -> Self
+pub fn GlobPipeline::include_count(Self) -> Int
+pub fn GlobPipeline::include_pattern(Self, String) -> Self
+pub fn GlobPipeline::new(Int) -> Result[Self, CacheError]
+pub fn GlobPipeline::run(Self, Array[String]) -> Result[PipelineReport, GlobError]
+pub fn GlobPipeline::run_with_cache(Self, Array[String]) -> Result[(Self, PipelineReport), GlobError]
+pub fn GlobPipeline::sorted(Self) -> Self
+pub fn GlobPipeline::with_limit(Self, Int) -> Result[Self, PipelineError]
+pub fn GlobPipeline::with_options(Self, GlobOptions) -> Self
+pub fn GlobPipeline::without_hidden(Self) -> Self
+
+pub(all) struct GlobQuery {
+  includes : Array[CompiledPattern]
+  excludes : Array[CompiledPattern]
+  options : GlobOptions
+  min_depth : Int
+  limit : Int?
+} derive(Eq, @debug.Debug)
+pub fn GlobQuery::directories_only(Self) -> Self
+pub fn GlobQuery::exclude_count(Self) -> Int
+pub fn GlobQuery::exclude_pattern(Self, String) -> Result[Self, GlobError]
+pub fn GlobQuery::execute_filesystem(Self, String) -> Result[QueryReport, GlobError]
+pub fn GlobQuery::execute_index(Self, PathIndex) -> QueryReport
+pub fn GlobQuery::execute_paths(Self, Array[String]) -> QueryReport
+pub fn GlobQuery::files_only(Self) -> Self
+pub fn GlobQuery::include_count(Self) -> Int
+pub fn GlobQuery::include_pattern(Self, String) -> Result[Self, GlobError]
+pub fn GlobQuery::matches(Self, String) -> Bool
+pub fn GlobQuery::new() -> Self
+pub fn GlobQuery::sorted(Self) -> Self
+pub fn GlobQuery::summary(Self) -> String
+pub fn GlobQuery::with_limit(Self, Int) -> Result[Self, GlobError]
+pub fn GlobQuery::with_min_depth(Self, Int) -> Result[Self, GlobError]
+pub fn GlobQuery::with_options(Self, GlobOptions) -> Self
+pub fn GlobQuery::without_hidden(Self) -> Self
+
+pub(all) struct GlobRule {
+  source : String
+  pattern : CompiledPattern
+  action : RuleAction
+  anchored : Bool
+  directory_only : Bool
+  has_separator : Bool
+} derive(Eq, @debug.Debug)
+
+pub(all) struct GlobRules {
+  rules : Array[GlobRule]
+} derive(Eq, @debug.Debug)
+pub fn GlobRules::allows(Self, String, Bool) -> Bool
+pub fn GlobRules::append(Self, Self) -> Self
+pub fn GlobRules::decision(Self, String, Bool) -> RuleDecision
+pub fn GlobRules::exclude_count(Self) -> Int
+pub fn GlobRules::explain(Self, String, Bool) -> String
+pub fn GlobRules::filter(Self, Array[String]) -> Array[String]
+pub fn GlobRules::filter_with_kinds(Self, Array[(String, Bool)]) -> Array[String]
+pub fn GlobRules::from_lines(Array[String]) -> Result[Self, GlobError]
+pub fn GlobRules::from_text(String) -> Result[Self, GlobError]
+pub fn GlobRules::include_count(Self) -> Int
+pub fn GlobRules::is_empty(Self) -> Bool
+pub fn GlobRules::rule_count(Self) -> Int
+pub fn GlobRules::to_array(Self) -> Array[GlobRule]
+
+pub(all) struct GlobWorkload {
+  name : String
+  patterns : Array[String]
+  paths : Array[String]
+} derive(Eq, @debug.Debug)
+pub fn GlobWorkload::name(Self) -> String
+pub fn GlobWorkload::path_count(Self) -> Int
+pub fn GlobWorkload::paths(Self) -> Array[String]
+pub fn GlobWorkload::pattern_count(Self) -> Int
+pub fn GlobWorkload::patterns(Self) -> Array[String]
+pub fn GlobWorkload::with_path(Self, String) -> Self
+pub fn GlobWorkload::with_pattern(Self, String) -> Self
+
+pub(all) struct IndexStats {
+  total : Int
+  files : Int
+  directories : Int
+  hidden : Int
+  max_depth : Int
+} derive(Eq, @debug.Debug)
+
 pub(all) struct MatchReport {
   matched : Array[String]
   unmatched : Array[String]
+} derive(Eq, @debug.Debug)
+
+pub(all) struct PathIndex {
+  entries : Array[PathRecord]
+  generation : Int
+} derive(Eq, @debug.Debug)
+pub fn PathIndex::add_directory(Self, String) -> Self
+pub fn PathIndex::add_file(Self, String) -> Self
+pub fn PathIndex::add_many(Self, Array[PathRecord]) -> Self
+pub fn PathIndex::apply_rules(Self, GlobRules) -> Array[PathRecord]
+pub fn PathIndex::children(Self, String) -> Array[PathRecord]
+pub fn PathIndex::clear(Self) -> Self
+pub fn PathIndex::contains(Self, String) -> Bool
+pub fn PathIndex::count_extension(Self, String) -> Int
+pub fn PathIndex::directories(Self) -> Array[PathRecord]
+pub fn PathIndex::files(Self) -> Array[PathRecord]
+pub fn PathIndex::from_entries(Array[PathRecord]) -> Self
+pub fn PathIndex::generation(Self) -> Int
+pub fn PathIndex::get(Self, String) -> PathRecord?
+pub fn PathIndex::is_empty(Self) -> Bool
+pub fn PathIndex::length(Self) -> Int
+pub fn PathIndex::new() -> Self
+pub fn PathIndex::query(Self, String) -> Result[Array[PathRecord], GlobError]
+pub fn PathIndex::query_with_rules(Self, String, GlobRules) -> Result[Array[PathRecord], GlobError]
+pub fn PathIndex::records(Self) -> Array[PathRecord]
+pub fn PathIndex::remove(Self, String) -> Self
+pub fn PathIndex::search_compiled(Self, CompiledPattern) -> Array[PathRecord]
+pub fn PathIndex::stats(Self) -> IndexStats
+pub fn PathIndex::under(Self, String) -> Array[PathRecord]
+
+pub enum PathKind {
+  File
+  Directory
+} derive(Eq, @debug.Debug)
+
+pub(all) struct PathRecord {
+  path : String
+  kind : PathKind
+  depth : Int
+  basename : String
+  extension : String?
+  hidden : Bool
+} derive(Eq, @debug.Debug)
+pub fn PathRecord::directory(String) -> Self
+pub fn PathRecord::file(String) -> Self
+pub fn PathRecord::is_directory(Self) -> Bool
+pub fn PathRecord::is_file(Self) -> Bool
+pub fn PathRecord::matches(Self, CompiledPattern) -> Bool
+pub fn PathRecord::new(String, PathKind) -> Self
+
+pub(all) struct PatternCache {
+  entries : Array[CachedPattern]
+  capacity : Int
+  hits : Int
+  misses : Int
+  evictions : Int
+} derive(Eq, @debug.Debug)
+pub fn PatternCache::capacity(Self) -> Int
+pub fn PatternCache::clear(Self) -> Self
+pub fn PatternCache::compile_all(Self, Array[String]) -> Result[(Self, Array[CompiledPattern]), GlobError]
+pub fn PatternCache::contains(Self, String) -> Bool
+pub fn PatternCache::entries_count(Self) -> Int
+pub fn PatternCache::filter(Self, String, Array[String]) -> Result[(Self, Array[String]), GlobError]
+pub fn PatternCache::get_or_compile(Self, String) -> Result[(Self, CompiledPattern), GlobError]
+pub fn PatternCache::hit_rate_percent(Self) -> Int
+pub fn PatternCache::match_all(Self, Array[String], String) -> Result[(Self, Bool), GlobError]
+pub fn PatternCache::match_any(Self, Array[String], Array[String]) -> Result[(Self, Bool), GlobError]
+pub fn PatternCache::new(Int) -> Result[Self, CacheError]
+pub fn PatternCache::sources(Self) -> Array[String]
+pub fn PatternCache::stats(Self) -> CacheStats
+pub fn PatternCache::summary(Self) -> String
+
+pub(all) struct PatternExplanation {
+  source : String
+  normalized : String
+  tokens : Array[String]
+  ast_text : String
+  stats : PatternStats
+  risk : PatternRisk
+  literal_prefix : String
+  separator_count : Int
+} derive(Eq, @debug.Debug)
+pub fn PatternExplanation::branch_count(Self) -> Int
+pub fn PatternExplanation::complexity_score(Self) -> Int
+pub fn PatternExplanation::has_recursive_wildcard(Self) -> Bool
+pub fn PatternExplanation::is_literal(Self) -> Bool
+pub fn PatternExplanation::recommendation(Self) -> String
+pub fn PatternExplanation::risk_name(Self) -> String
+pub fn PatternExplanation::signature(Self) -> String
+pub fn PatternExplanation::summary(Self) -> String
+pub fn PatternExplanation::token_count(Self) -> Int
+
+pub enum PatternRisk {
+  Literal
+  Bounded
+  Recursive
+  HighBranching
 } derive(Eq, @debug.Debug)
 
 pub(all) struct PatternStats {
@@ -123,6 +378,51 @@ pub(all) struct PatternStats {
 pub fn PatternStats::has_magic(Self) -> Bool
 pub fn PatternStats::is_literal(Self) -> Bool
 pub fn PatternStats::magic_count(Self) -> Int
+
+pub enum PipelineError {
+  InvalidLimit
+} derive(Eq, @debug.Debug)
+pub impl Show for PipelineError
+
+pub(all) struct PipelineReport {
+  scanned : Int
+  included : Int
+  excluded : Int
+  returned : Int
+  truncated : Bool
+  results : Array[String]
+  cache_hits : Int
+  cache_misses : Int
+} derive(Eq, @debug.Debug)
+pub fn PipelineReport::csv_header(Self) -> String
+pub fn PipelineReport::csv_row(Self) -> String
+pub fn PipelineReport::has_results(Self) -> Bool
+pub fn PipelineReport::summary(Self) -> String
+
+pub(all) struct QueryReport {
+  examined : Int
+  included : Int
+  excluded : Int
+  returned : Int
+  truncated : Bool
+  results : Array[String]
+} derive(Eq, @debug.Debug)
+pub fn QueryReport::has_results(Self) -> Bool
+pub fn QueryReport::is_complete(Self) -> Bool
+pub fn QueryReport::page(Self, Int, Int) -> Array[String]
+pub fn QueryReport::returned_count(Self) -> Int
+pub fn QueryReport::summary(Self) -> String
+
+pub enum RuleAction {
+  Include
+  Exclude
+} derive(Eq, @debug.Debug)
+
+pub enum RuleDecision {
+  Included
+  Excluded
+  Unmatched
+} derive(Eq, @debug.Debug)
 
 pub enum Token {
   Text(String)
@@ -139,6 +439,49 @@ pub enum Token {
   Range(Char, Char)
 } derive(Eq, @debug.Debug)
 
+pub(all) struct TraversalPlan {
+  pattern : CompiledPattern
+  root_prefix : String
+  recursive : Bool
+  literal : Bool
+} derive(Eq, @debug.Debug)
+pub fn TraversalPlan::can_descend(Self, String) -> Bool
+pub fn TraversalPlan::describe(Self) -> String
+pub fn TraversalPlan::estimated_skipped_levels(Self, Int) -> Int
+pub fn TraversalPlan::from_compiled(CompiledPattern) -> Self
+pub fn TraversalPlan::from_pattern(String) -> Result[Self, GlobError]
+pub fn TraversalPlan::is_literal(Self) -> Bool
+pub fn TraversalPlan::is_prunable(Self) -> Bool
+pub fn TraversalPlan::is_recursive(Self) -> Bool
+pub fn TraversalPlan::matches(Self, String) -> Bool
+pub fn TraversalPlan::pattern(Self) -> CompiledPattern
+pub fn TraversalPlan::prefix_depth(Self) -> Int
+pub fn TraversalPlan::start_prefix(Self, String) -> String
+
+pub enum WorkloadError {
+  InvalidSize
+  TooLarge
+} derive(Eq, @debug.Debug)
+pub impl Show for WorkloadError
+
+pub(all) struct WorkloadResult {
+  workload_name : String
+  pattern_count : Int
+  path_count : Int
+  matches : Int
+  patterns_with_matches : Int
+  invalid_patterns : Int
+  literal_patterns : Int
+  recursive_patterns : Int
+} derive(Eq, @debug.Debug)
+pub fn WorkloadResult::coverage_percent(Self) -> Int
+pub fn WorkloadResult::csv_header(Self) -> String
+pub fn WorkloadResult::csv_row(Self) -> String
+pub fn WorkloadResult::has_invalid_patterns(Self) -> Bool
+pub fn WorkloadResult::is_useful(Self) -> Bool
+pub fn WorkloadResult::summary(Self) -> String
+
 // Type aliases
 
 // Traits
+
