@@ -13,3 +13,7 @@
 - Added `GlobQuery::execute_index` for repeated, metadata-aware queries over `PathIndex`.
 - Added safe `QueryReport` pagination, completion status, result count, and log summary APIs.
 - Corrected acceptance documentation, repository links, reference-project licensing scope, and source-size evidence.
+## 0.2.3
+
+- Pin CI and documented installation commands to MoonBit 0.10.3 for reproducible formatting and interface checks.
+- Disable the MSYS2 package cache in the three-OS matrix to avoid concurrent cache reservation failures.

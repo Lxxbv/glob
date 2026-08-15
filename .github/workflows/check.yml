@@ -10,6 +10,9 @@ on:
 permissions:
   contents: read
 
+env:
+  MOONBIT_INSTALL_VERSION: 0.10.3
+
 jobs:
   build:
     strategy:
@@ -45,6 +48,7 @@ jobs:
           msystem: UCRT64
           path-type: inherit
           update: true
+          cache: false
           install: >-
             mingw-w64-ucrt-x86_64-gcc
 

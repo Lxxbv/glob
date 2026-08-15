@@ -47,6 +47,7 @@
 ```powershell
 # Windows PowerShell
 Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+$env:MOONBIT_INSTALL_VERSION = "0.10.3"
 irm https://cli.moonbitlang.com/install/powershell.ps1 | iex
 moon version --all
 ```
@@ -54,7 +55,7 @@ moon version --all
 Linux/macOS：
 
 ```bash
-curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+MOONBIT_INSTALL_VERSION=0.10.3 bash -c "\$(curl -fsSL https://cli.moonbitlang.com/install/unix.sh)"
 echo "$HOME/.moon/bin" >> "$GITHUB_PATH"  # CI 环境；本地请按 Shell 配置 PATH
 moon version --all
 ```
